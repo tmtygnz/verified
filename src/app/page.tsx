@@ -1,5 +1,16 @@
-import Image from "next/image";
+"use client";
+import { socket } from "@grc/lib/socketProvider";
+import React, { useEffect } from "react";
+import Cookie from "js-cookie";
 
-export default function Home() {
-	return <div></div>;
-}
+const HomePage = () => {
+	useEffect(() => {
+		socket.emit("session-new");
+		socket.on("session-here", (a, b) => {
+			Cookie.set("session", a);
+		});
+	});
+	return <div>page</div>;
+};
+
+export default HomePage;
