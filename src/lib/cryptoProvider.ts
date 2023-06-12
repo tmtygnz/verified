@@ -1,4 +1,7 @@
-import crypto from "crypto";
+import crypto, { createECDH } from "crypto";
 
-export const cryptoWeb = crypto.getDiffieHellman("modp18");
-export const keys = cryptoWeb.generateKeys();
+export const webEnc = createECDH("secp384r1");
+export const webEncPubKeyB64 = () => {
+	webEnc.generateKeys();
+	return webEnc.getPublicKey().toString("base64");
+};
