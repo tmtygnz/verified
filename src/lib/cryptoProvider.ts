@@ -1,7 +1,5 @@
-import crypto, { createECDH } from "crypto";
+import nacl from "tweetnacl";
 
-export const webEnc = createECDH("secp384r1");
-export const webEncPubKeyB64 = () => {
-	webEnc.generateKeys();
-	return webEnc.getPublicKey().toString("base64");
-};
+export const webKeys = nacl.box.keyPair();
+export const webPrivateKey = webKeys.secretKey;
+export const webPublicKey = webKeys.publicKey;

@@ -1,25 +1,24 @@
-import forge from "node-forge";
-export const encryptAES = (data: string, key: string) => {
-	let iv = crypto.randomBytes(12);
-	let sha = crypto.createHash("sha256");
-	sha.update(key);
+import { fromByteArray } from "base64-js";
+import nacl from "tweetnacl";
+import naclut from "tweetnacl-util";
+import { webPrivateKey } from "./cryptoProvider";
 
-	let cipher = crypto.createCipheriv("aes-256-gcm", sha.digest(), iv);
-	let ch = cipher.update(data);
-	let encrypted = Buffer.concat([ch, cipher.final()]).toString("base64");
-	return { iv: iv, encrypted };
-};
+function generateNonce() {
+	return nacl.randomBytes(nacl.secretbox.nonceLength);
+}
 
-export const decryptAES = async (
-	iv: ArrayBuffer,
-	encrypted: string,
-	key: string
-) => {
-	let sha = crypto.createHash("sha256");
-	sha.update(key);
-	let enc = Buffer.from(encrypted, "base64");
-	let decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(key), iv);
-	let decrypted = decipher.update(enc);
-	decrypted = Buffer.concat([decrypted, decipher.final()]);
-	return decrypted.toString();
-};
+export function ecryptAes(data: string) {
+	const nonce = generateNonce();
+	let encryptedData = nacl.secretbox(
+		naclut.decodeUTF8(data),
+		nonce,
+		webPrivateKey
+	);
+
+	return { nonce, encryptedData };
+}
+
+export function decryptAes(encrypted: Uint8Array, nonce: Uint8Array) {
+	let encryptedData = nacl.secretbox.open(encrypted, nonce, webPrivateKey);
+	console.log(encryptedData);
+}
