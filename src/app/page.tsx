@@ -16,27 +16,23 @@ const HomePage = () => {
 		socket.on("session-ok", (data: ISession) => {
 			console.log(data);
 			console.log("PubKeyEx");
-			socket.emit("exchange", naclut.encodeBase64(webPublicKey));
+			socket.emit("exchange", webPublicKey);
 		});
 
-		socket.on("re-exchange", (serverPublicKey: string) => {
+		socket.on("re-exchange", (serverPublicKey: Uint8Array) => {
 			console.log(serverPublicKey);
 			const ecdhSecretKey = nacl.box.before(
-				new Uint8Array(naclut.decodeBase64(serverPublicKey)),
+				new Uint8Array(serverPublicKey),
 				webPrivateKey
 			);
-			console.log(fromByteArray(ecdhSecretKey));
+			console.log(naclut.encodeBase64(ecdhSecretKey));
 			socket.emit("test");
 		});
 
-		socket.on(
-			"re-test",
-			(e: { nonce: ArrayBuffer; encryptedData: ArrayBuffer }) =>
-				decryptAes(
-					new Uint8Array(e.encryptedData),
-					new Uint8Array(e.nonce)
-				)
-		);
+		socket.on("re-test", (e: { nonce: string; encrypted: string }) => {
+			console.log(e);
+			decryptAes(e.encrypted, e.nonce);
+		});
 	}, []);
 	return <div>{}</div>;
 };

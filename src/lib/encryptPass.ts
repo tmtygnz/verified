@@ -1,24 +1,44 @@
-import { fromByteArray } from "base64-js";
 import nacl from "tweetnacl";
 import naclut from "tweetnacl-util";
-import { webPrivateKey } from "./cryptoProvider";
+import { webKeys } from "./cryptoProvider";
 
 function generateNonce() {
 	return nacl.randomBytes(nacl.secretbox.nonceLength);
 }
 
 export function ecryptAes(data: string) {
-	const nonce = generateNonce();
-	let encryptedData = nacl.secretbox(
-		naclut.decodeUTF8(data),
-		nonce,
-		webPrivateKey
-	);
+	try {
+		const nonce = generateNonce();
+		let encryptedData = nacl.secretbox(
+			Uint8Array.from(data, (c) => c.charCodeAt(0)),
+			nonce,
+			webKeys.secretKey
+		);
 
-	return { nonce, encryptedData };
+		console.log(
+			naclut.encodeUTF8(
+				nacl.secretbox.open(encryptedData, nonce, webKeys.secretKey)!
+			)
+		);
+		return { nonce, encryptedData };
+	} catch (e) {
+		console.log(e);
+	}
 }
 
-export function decryptAes(encrypted: Uint8Array, nonce: Uint8Array) {
-	let encryptedData = nacl.secretbox.open(encrypted, nonce, webPrivateKey);
-	console.log(encryptedData);
+export function decryptAes(base64EncryptedData: string, base64Nonce: string) {
+	let encrypted = naclut.decodeBase64(base64EncryptedData);
+	let nonce = naclut.decodeBase64(base64Nonce);
+
+	let encryptedData = nacl.secretbox.open(
+		encrypted,
+		nonce,
+		webKeys.secretKey
+	)!;
+
+	console.log({
+		data: encryptedData,
+		nonce: nonce,
+		secret: webKeys.secretKey,
+	});
 }
